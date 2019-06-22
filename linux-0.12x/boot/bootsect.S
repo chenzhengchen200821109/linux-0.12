@@ -63,8 +63,7 @@ start:
 	movw $256, %cx          # 256*2=512Bytes
 	subw %si, %si
 	subw %di, %di
-	rep
-	movw
+	rep movw
 	ljmp $INITSEG, $go
 
 go:	
@@ -308,7 +307,7 @@ die:
 rp_read:
 	movw %es, %ax
 	cmpw $ENDSEG, %ax           		# have we loaded all yet?
-	jb ok1_read
+	jb ok1_read                         # jmp if CF = 1 
 	ret
 ok1_read:
 	seg %cs
@@ -321,37 +320,58 @@ ok1_read:
 	je ok2_read
 	xor ax,ax
 	sub ax,bx
-	shr ax,#9
+	shr $9, %ax
 ok2_read:
 	call read_track
-	mov cx,ax
-	add ax,sread
-	seg cs
-	cmp ax,sectors
-	jne ok3_read
-	mov ax,#1
-	sub ax,head
-	jne ok4_read
-	inc track
+	movw %ax, %cx
+	addw $sread, %ax 
+	seg %cs
+	cmpw $sectors, %ax 
+	jne ok3_read                        # jmp if ZF = 0
+	movw $1, %ax 
+	subw $head, %ax 
+	jne ok4_read                        # jmp if ZF = 0
+	inc $track
 ok4_read:
-	mov head,ax
-	xor ax,ax
+	movw %ax, $head 
+	xorw %ax, %ax
 ok3_read:
-	mov sread,ax
-	shl cx,#9
-	add bx,cx
-	jnc rp_read
-	mov ax,es
-	add ah,#0x10
-	mov es,ax
-	xor bx,bx
+	movw %ax, $sread
+	shl $9, %cx 
+	addw %cx, %bx
+	jnc rp_read                         # jmp if CF = 0
+	movw %es, %ax
+	addb $0x10, %ah 
+	movw %ax, %es 
+	xorw %bx, %bx
 	jmp rp_read
 
+/*
+ *
+ */ 
+
+
+/*
+ * Write Teletype Mode(0eh)
+ * The Write Teletype video BIOS function is called to write a character 
+ * to the display at the current cursor location, advancing the cursor to 
+ * the next column. If the column would extend off the right edge of the 
+ * screen, the column is reset to 0, and the row is incremented. If the row 
+ * would move off the end of the screen, then the entire screen is scrolled.
+ * 
+ * input parameters:
+ *         ah - 0eh, indicating the Write Teletype Mode Function.
+ *         al - Character to write.
+ *         bh - Video page number (0 for first page).
+ *         bl - Foreground color, but only for graphics modes.
+ * output parameters:
+ *         none.
+ */
 read_track:
 	pusha
 	pusha	
-	mov	ax, #0xe2e 	! loading... message 2e = .
-	mov	bx, #7
+	movw $0x0e2e, %ax                 	# loading... message 2e = .
+	movw $7, %bx
  	int	$0x10
 	popa		
 
@@ -428,31 +448,47 @@ bad_rt:
  *	ret <- sp
  *
 */
- 
 print_all:
-	mov	cx, #5		! error code + 4 registers
-	mov	bp, sp	
+	movw $5, %cx        		# error code + 4 registers
+	movw %sp, %bp	
 
 print_loop:
-	push	cx		! save count left
-	call	print_nl	! nl for readability
-	jae	no_reg		! see if register name is needed
+	pushw %cx		            # save count left
+	call print_nl	            # nl for readability
+	jae	no_reg		            # see if register name is needed (jmp if CF = 0)
 	
-	mov	ax, #0xe05 + 0x41 - 1
-	sub	al, cl
-	int	0x10
+ 
+/*
+ * Write Teletype Mode(0eh)
+ * The Write Teletype video BIOS function is called to write a character 
+ * to the display at the current cursor location, advancing the cursor to 
+ * the next column. If the column would extend off the right edge of the 
+ * screen, the column is reset to 0, and the row is incremented. If the row 
+ * would move off the end of the screen, then the entire screen is scrolled.
+ * 
+ * input parameters:
+ *         ah - 0eh, indicating the Write Teletype Mode Function.
+ *         al - Character to write.
+ *         bh - Video page number (0 for first page).
+ *         bl - Foreground color, but only for graphics modes.
+ * output parameters:
+ *         none.
+ */
+	mov	$0x0e05 + $0x41 - $1, %ax 
+	subb %cl, %al 
+	int	$0x10
 
-	mov	al, #0x58 	! X
-	int	0x10
+	movb $0x58, %al             # character 'X'
+	int	$0x10
 
-	mov	al, #0x3a 	! :
-	int	0x10
+	movb $0x3a,	%al             # character ':'
+	int	$0x10
 
 no_reg:
-	add	bp, #2		! next register
-	call	print_hex	! print it
-	pop	cx
-	loop	print_loop
+	addw $2, %bp                # next register
+	call print_hex	            # print it
+	popw %cx
+	loop print_loop
 	ret
 
 /*
