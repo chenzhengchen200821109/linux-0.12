@@ -17,7 +17,7 @@
 #include <asm/system.h>
 #include <asm/io.h>
 #include <asm/segment.h>
-
+//#include <sys/time.h>
 #include <signal.h>
 
 #define _S(nr) (1<<((nr)-1))

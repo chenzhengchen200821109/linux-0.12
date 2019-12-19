@@ -31,7 +31,7 @@
 #include <signal.h>
 
 #include <asm/system.h>
-
+#include <linux/mm.h>
 #include <linux/sched.h>
 #include <linux/head.h>
 #include <linux/kernel.h>
@@ -42,7 +42,7 @@ current->start_code + current->end_code)
 unsigned long HIGH_MEMORY = 0;
 
 #define copy_page(from,to) \
-__asm__("cld ; rep ; movsl"::"S" (from),"D" (to),"c" (1024):"cx","di","si")
+__asm__("cld ; rep ; movsl"::"S" (from),"D" (to),"c" (1024))
 
 unsigned char mem_map [ PAGING_PAGES ] = {0,};
 

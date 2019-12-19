@@ -9,7 +9,6 @@
  */
 
 #include <stddef.h>
-
 #include <linux/math_emu.h>
 #include <asm/segment.h>
 
