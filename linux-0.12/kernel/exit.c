@@ -259,7 +259,7 @@ static int has_stopped_jobs(int pgrp)
 	return(0);
 }
 
-volatile void do_exit(long code)
+void do_exit(long code) 
 {
 	struct task_struct *p;
 	int i;

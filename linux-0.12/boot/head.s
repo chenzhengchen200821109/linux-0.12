@@ -14,7 +14,7 @@
  * 是页目录将存在的地方，因此这里的启动代码将被页目录覆盖掉。
  */
 .text
-.globl idt,gdt,pg_dir,tmp_floppy_area
+.globl idt,gdt,pg_dir,tmp_floppy_area,startup_32
 pg_dir:                             # 页目录将会存放在这里
 startup_32:
     # 再次注意!!! 这里已经处于32 位运行模式，因此这里的$0x10 并不是把地址0x10 装入各

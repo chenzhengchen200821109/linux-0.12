@@ -1,0 +1,110 @@
+
+OS := $(shell uname)
+
+ifeq ($V, 1)
+  Q =
+  S =
+else
+  MAKEFLAGS += --no-print-directory
+  S ?= -s
+  Q ?= @
+endif
+
+export V Q S
+
+#LINUX_VERSION ?= 0.12
+# ':=' are simply expanded variables.
+LINUX_SRC     := linux-0.12
+# '?=' a variable to be set to a value only if
+# it's not already set.
+LINUX_IMAGE ?= $(LINUX_SRC)/Image
+# src/boot/bootsect.sym, src/boot/setup.sym
+DST ?= $(if $(LINUX_DST), $(LINUX_DST), $(LINUX_SRC)/kernel.sym)
+
+TOOL_DIR := tools
+ROOTFS_DIR := rootfs
+CALLGRAPH_DIR := callgraph
+
+GDB ?= gdb
+
+# Qemu
+QEMU_PATH =
+QEMU ?= qemu-system-i386
+MEM  ?= 16M
+
+# Bochs
+#BOCHS ?= tools/bochs/bochs-debugger
+BOCHS_PATH =
+BOCHS_PREBUILT ?= 1
+BOCHS_PREBUILT_PATH = ${TOOL_DIR}/bochs
+
+BOCHS ?= bochs
+
+# VM configuration
+VM_CFG = $(TOOL_DIR)/.vm.cfg
+
+# Tool for specify root device
+SETROOTDEV = RAMDISK_START=$(RAMDISK_START) $(TOOL_DIR)/setrootdev.sh
+
+# Specify the Rootfs Image file
+# 硬盘
+HDA_IMG = hdc-0.12.img
+# 软盘
+FLP_IMG = rootimage-0.12
+# 虚拟盘
+RAM_IMG = rootram.img
+
+# Ramdisk start offset and size, in Kb
+RAMDISK_START ?= 256
+
+# Tool for call graph generation
+CG = $(TOOL_DIR)/callgraph
+
+# Specify boot order drives as a string of drive letters. Valid drive letters
+# depend on the target achitecture. The x86 PC uses: a, b (floppy 1 and 2), c
+# (first hard disk), d (first CD-ROM), n-p (Etherboot from network adapter 1-4),
+# hard disk boot is the default. To apply a particular boot order only on the
+# first startup, specify it via once.
+_QEMU_OPTS = -m $(MEM) -boot c 2>/dev/null
+QEMU_OPTS  = -m $(MEM) -boot a -fda $(LINUX_IMAGE) 2>/dev/null
+
+## To using this kvm feature in hardisk boot, please must enable cpu virtualization in bios
+##
+## Usage: CTRL+ALT+Delete --> Delete --> bios features --> Intel virtualization technology --> enabled
+##
+#
+#QEMU_PREBUILT_PATH= $(TOOL_DIR)/qemu
+## Linux 0.11 floppy support is broken in new qemu version, so, please use prebuilt 0.10.6 qemu by default
+## But the harddisk support is ok in both of old and new qemu, use qemu here to get possible kvm speedup
+#ifeq ($(filter $(MAKECMDGOALS),start-hd boot-hd hd-boot hd-start debug-hd),$(MAKECMDGOALS))
+#   QEMU_PREBUILT ?= 0
+#else
+#   QEMU_PREBUILT ?= 1
+#endif
+#
+## Only enable kvm for new qemu, the old one prebuilt in tools/qemu/ not work with kvm
+#ifeq ($(QEMU_PREBUILT),0)
+#   # KVM speedup for x86 architecture, assume our host is x86 currently
+#   QEMU := sudo $(QEMU)
+#   ifneq ($(findstring debug,$(MAKECMDGOALS)),debug)
+#     KVM_DEV ?= /dev/kvm
+#     ifeq ($(KVM_DEV),$(wildcard $(KVM_DEV)))
+#       QEMU_OPTS += -enable-kvm
+#       _QEMU_OPTS += -enable-kvm
+#     endif
+#   endif
+#endif
+#
+#ifeq ($(OS), Linux)
+#  ifeq ($(QEMU_PREBUILT), 1)
+#    QEMU_PATH = $(QEMU_PREBUILT_PATH)
+#    QEMU_XOPTS += -no-kqemu -L $(QEMU_PATH)
+#  endif
+#  ifeq ($(BOCHS_PREBUILT), 1)
+#    BOCHS_PATH = $(BOCHS_PREBUILT_PATH)
+#  endif
+#endif
+#
+##ifeq ($(OS), Darwin)
+##  GDB := tools/mac/gdb
+##endif

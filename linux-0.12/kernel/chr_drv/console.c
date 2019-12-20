@@ -323,8 +323,8 @@ static void del(int currcons)
 
 static void csi_J(int currcons, int vpar)
 {
-	long count __asm__("cx");
-	long start __asm__("di");
+	long count; //__asm__("cx");
+	long start; //__asm__("di");
 
 	switch (vpar) {
 		case 0:	/* erase from cursor to end of display */
@@ -352,8 +352,8 @@ static void csi_J(int currcons, int vpar)
 
 static void csi_K(int currcons, int vpar)
 {
-	long count __asm__("cx");
-	long start __asm__("di");
+	long count; //__asm__("cx");
+	long start; //__asm__("di");
 
 	switch (vpar) {
 		case 0:	/* erase from cursor to end of line */

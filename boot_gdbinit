@@ -1,0 +1,26 @@
+shell echo -e "\nWaiting for 2 secs..."
+shell sleep 2
+shell echo -e "Executing gdb commands in local .gdbinit ..."
+
+shell echo -e "\n(gdb) target remote :1234"
+target remote :1234
+
+shell sleep 1
+shell echo -e "\n(gdb) break _start"
+b _start
+
+shell sleep 1
+shell echo -e "\n(gdb) continue"
+c
+
+shell sleep 1
+shell echo -e "\n(gdb) info reg"
+info reg
+
+shell sleep 1
+shell echo -e "\n(gdb) list"
+l
+
+shell sleep 1
+shell echo -e "\n(gdb) bt"
+bt
